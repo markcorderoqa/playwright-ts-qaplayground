@@ -1,0 +1,106 @@
+name: Playwright Quality Gate
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect_changes:
+    runs-on: ubuntu-latest
+    outputs:
+      visual: ${{ steps.filter.outputs.visual }}
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: dorny/paths-filter@v4
+      id: filter
+      with:
+        filters: |
+          visual:
+            - 'tests/visual/**'
+            - 'tests/**-snapshots/**'
+            - 'src/assertions/visual.ts'
+            - 'src/pages/**'
+            - 'src/components/**'
+            - 'playwright.config.ts'
+            - 'src/config/projects.ts'
+
+  static_checks:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: npm
+    - name: Install dependencies
+      run: npm ci
+    - name: Lint and policy checks
+      run: npm run lint:all
+    - name: Typecheck
+      run: npm run typecheck
+
+  playwright_tests:
+    needs: static_checks
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: npm
+    - name: Install dependencies
+      run: npm ci
+    - name: Run Playwright tests (sharded)
+      run: npx playwright test --shard=${{ matrix.shard }}/2 --grep-invert @visual
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() || cancelled() || github.event_name == 'workflow_dispatch' }}
+      with:
+        name: playwright-artifacts-shard-${{ matrix.shard }}
+        path: |
+          playwright-report/
+          test-results/
+          test-results/junit.xml
+        retention-days: 30
+
+  visual_tests:
+    needs: [static_checks, detect_changes]
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect_changes.outputs.visual == 'true' }}
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.59.1-noble
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 22
+        cache: npm
+    - name: Install dependencies
+      run: npm ci
+    - name: Run visual tests (single worker)
+      run: npx playwright test tests/visual --project=visual-linux --workers=1
+    - uses: actions/upload-artifact@v4
+      if: ${{ failure() || cancelled() || github.event_name == 'workflow_dispatch' }}
+      with:
+        name: playwright-artifacts-visual
+        path: |
+          playwright-report/
+          test-results/
+          test-results/junit.xml
+        retention-days: 30
