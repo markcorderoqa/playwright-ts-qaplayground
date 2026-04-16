@@ -5,11 +5,13 @@ import { BasePage } from './base.page';
 export class PracticePage extends BasePage {
   readonly header: HeaderComponent;
   readonly inputFieldsCard: Locator;
+  readonly buttonsCard: Locator;
 
   constructor(page: Page) {
     super(page);
     this.header = new HeaderComponent(page);
     this.inputFieldsCard = page.getByTestId('card-link-input-fields');
+    this.buttonsCard = page.getByTestId('practice-card-buttons');
   }
 
   async assertInputFieldsCardVisible(): Promise<void> {
@@ -18,5 +20,13 @@ export class PracticePage extends BasePage {
 
   async clickInputFieldsPracticeNowButton(): Promise<void> {
     await this.inputFieldsCard.click();
+  }
+
+  async assertButtonsCardVisible(): Promise<void> {
+    await expect(this.buttonsCard).toBeVisible();
+  }
+
+  async clickButtonsPracticeNowButton(): Promise<void> {
+    await this.buttonsCard.click();
   }
 }

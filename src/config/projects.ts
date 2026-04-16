@@ -7,12 +7,43 @@ export function createProjects(): PlaywrightTestConfig['projects'] {
 
   return [
     {
+      name: 'auth-setup',
+      grep: /@auth-setup/,
+      retries: 0,
+      fullyParallel: false,
+      workers: 1,
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+    {
       name: 'chromium-e2e',
-      grepInvert: /@api|@visual|@a11y/,
+      grepInvert: /@api|@visual|@a11y|@auth-setup/,
+      dependencies: ['auth-setup'],
       retries: isCI ? 2 : 1,
       workers: isCI ? 2 : undefined,
       use: {
         ...devices['Desktop Chrome'],
+      },
+    },
+    {
+      name: 'firefox-e2e',
+      grepInvert: /@api|@visual|@a11y|@auth-setup/,
+      dependencies: ['auth-setup'],
+      retries: isCI ? 2 : 1,
+      workers: isCI ? 2 : undefined,
+      use: {
+        ...devices['Desktop Firefox'],
+      },
+    },
+    {
+      name: 'webkit-e2e',
+      grepInvert: /@api|@visual|@a11y|@auth-setup/,
+      dependencies: ['auth-setup'],
+      retries: isCI ? 2 : 1,
+      workers: isCI ? 2 : undefined,
+      use: {
+        ...devices['Desktop Safari'],
       },
     },
     {
