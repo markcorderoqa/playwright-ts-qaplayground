@@ -66,7 +66,11 @@ jobs:
         cache: npm
     - name: Install dependencies
       run: npm ci
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium firefox webkit
     - name: Run Playwright tests (sharded)
+      env:
+        HOME: /root
       run: npx playwright test --shard=${{ matrix.shard }}/2 --grep-invert @visual
     - uses: actions/upload-artifact@v4
       if: ${{ failure() || cancelled() || github.event_name == 'workflow_dispatch' }}
@@ -93,7 +97,11 @@ jobs:
         cache: npm
     - name: Install dependencies
       run: npm ci
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps chromium firefox webkit
     - name: Run visual tests (single worker)
+      env:
+        HOME: /root
       run: npx playwright test tests/visual --project=visual-linux --workers=1
     - uses: actions/upload-artifact@v4
       if: ${{ failure() || cancelled() || github.event_name == 'workflow_dispatch' }}
