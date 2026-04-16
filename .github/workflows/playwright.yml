@@ -66,8 +66,6 @@ jobs:
         cache: npm
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium firefox webkit
     - name: Run Playwright tests (sharded)
       env:
         HOME: /root
@@ -97,8 +95,6 @@ jobs:
         cache: npm
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps chromium firefox webkit
     - name: Run visual tests (single worker)
       env:
         HOME: /root
