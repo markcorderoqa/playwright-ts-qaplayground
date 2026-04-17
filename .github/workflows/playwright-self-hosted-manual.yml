@@ -34,7 +34,7 @@ jobs:
 
       - name: Run e2e tests
         if: ${{ inputs.test_target == 'e2e' || inputs.test_target == 'all' }}
-        run: npx playwright test --grep-invert @visual
+        run: npx playwright test --grep-invert "@visual"
 
       - name: Run visual tests
         if: ${{ inputs.test_target == 'visual' || inputs.test_target == 'all' }}
