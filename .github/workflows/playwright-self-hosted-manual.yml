@@ -1,0 +1,53 @@
+name: Playwright Self-Hosted Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_target:
+        description: "Test scope to run"
+        required: true
+        default: "e2e"
+        type: choice
+        options:
+          - e2e
+          - visual
+          - all
+
+jobs:
+  self_hosted_playwright:
+    name: Self-hosted Windows Playwright
+    timeout-minutes: 90
+    runs-on: [self-hosted, Windows, playwright]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install
+
+      - name: Run e2e tests
+        if: ${{ inputs.test_target == 'e2e' || inputs.test_target == 'all' }}
+        run: npx playwright test --grep-invert @visual
+
+      - name: Run visual tests
+        if: ${{ inputs.test_target == 'visual' || inputs.test_target == 'all' }}
+        env:
+          CI: ""
+        run: npx playwright test tests/visual --project=visual-win32 --workers=1
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: playwright-self-hosted-artifacts
+          path: |
+            playwright-report/
+            test-results/
+            test-results/junit.xml
+          retention-days: 14
