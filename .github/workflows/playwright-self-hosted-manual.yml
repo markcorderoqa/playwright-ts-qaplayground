@@ -17,7 +17,7 @@ jobs:
   self_hosted_playwright:
     name: Self-hosted Windows Playwright
     timeout-minutes: 90
-    runs-on: [self-hosted, Windows, playwright]
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
 
